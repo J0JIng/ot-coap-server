@@ -35,7 +35,6 @@ class ResourceHandler(resource.Resource):
             # Update the resource tree with client information
             self.sv_mgr.update_child_uri()
 
-            """Work in progress"""
             # Update the information on Client
             self.sv_mgr.update_child_device_info(ipaddress.ip_address(re.sub(r"[\[\]]", "", client_ip)), csv)
 
