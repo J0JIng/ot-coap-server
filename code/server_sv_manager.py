@@ -13,7 +13,6 @@ import aiocoap
 from aiocoap import *
 from aiocoap.protocol import Request
 
-
 import socket
 from zeroconf import ServiceInfo
 from zeroconf import ServiceBrowser, ServiceListener, Zeroconf
@@ -23,7 +22,7 @@ OT_DEVICE_CHILD_TIMEOUT_S = 190
 OT_DEVICE_CHILD_TIMEOUT_CYCLE_RATE = 1
 OT_DEVICE_POLL_INTERVAL_S = 5
 ADVERT_TIMING_INTERVAL_S = 30
-
+COAP_UDP_DEFAULT_PORT = 5683
 
 class OtDeviceType(enum.IntEnum):
     oG = 0
@@ -47,13 +46,14 @@ class OtDevice:
     vdd: int = field(default=0)
     rssi: int = field(default=0)
 
+
 class ServerManager:
     """ This class manages the ot clients and associated information.New children are
     found when the client sends a message to a known resource on the server"""
-    
-    client_ip6 = dict[IPv6Address, OtDevice]() # create dictionary of clients accepting service - sensitivity list
-    self_ip6 = ipaddress.IPv6Address # CoAP server IPv6
-    
+
+    client_ip6 = dict[IPv6Address, OtDevice]()  # create dictionary of clients accepting service - sensitivity list
+    self_ip6 = ipaddress.IPv6Address  # CoAP server IPv6
+
     # Queue for new children to be allocated a resource
     incoming_queue_child_ips = set[IPv6Address]()
     pend_queue_child_ips = set[IPv6Address]()
@@ -61,14 +61,14 @@ class ServerManager:
     def __init__(self, self_ip: IPv6Address):
         self.self_ip6 = self_ip
 
-    async def advertise_server(self, port):
+    async def advertise_server(self):
         """Advertise server's service periodically"""
         zeroconf = Zeroconf()
 
         # Define the service information
         service_name = "My CoAP Server"
         service_type = "_coap._udp.local."  # CoAP service type
-        device_port = port
+        device_port = COAP_UDP_DEFAULT_PORT
 
         # Create the service info object
         service_info = ServiceInfo(
@@ -79,7 +79,7 @@ class ServerManager:
             properties={},
         )
         try:
-            zeroconf.register_service(service_info) # Register the service
+            zeroconf.register_service(service_info)  # Register the service
             logging.info("successful: Server Advertised")
             zeroconf.close()  # Close the Zeroconf instance
 
@@ -95,12 +95,12 @@ class ServerManager:
 
     def update_child_uri(self):
         """ Add incoming clients to the resource tree. """
-        while len(ServerManager.incoming_queue_res_child_ips) > 0:
-            ip = ServerManager.incoming_queue_res_child_ips.pop()
+        while len(ServerManager.incoming_queue_child_ips) > 0:
+            ip = ServerManager.incoming_queue_child_ips.pop()
 
             if ip not in ServerManager.client_ip6:
                 try:
-                    ServerManager.pend_queue_res_child_ips.add(ip)
+                    ServerManager.pend_queue_child_ips.add(ip)
                     logging.info(str(ip) + " added to child pending queue")
                     tmp_uri = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
                     ServerManager.client_ip6[ip] = OtDevice(uri=tmp_uri)
@@ -111,10 +111,10 @@ class ServerManager:
                     logging.warning("Unable to updated in child sensitivity list with resource ")
                     raise ValueError
 
-    def update_child_device_info(self, ip: IPv6Address, ls: float , csv: list):
+    def update_child_device_info(self, ip: IPv6Address, csv: list):
         """ Updates the sensitivity list with new information from the child """
         try:
-            self.client_ip6[ip].last_seen = ls
+            # self.client_ip6[ip].last_seen = ls
             self.client_ip6[ip].timeout_cyc = OT_DEVICE_TIMEOUT_CYCLES
             """ work in progress...."""
             # Updates the  sensitivity list with new information from update odourguard PUT ....
