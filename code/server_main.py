@@ -1,3 +1,4 @@
+# Helper lib
 import asyncio  # pylint: disable=import-error
 import ipaddress
 import logging
@@ -62,18 +63,18 @@ async def main_task(sv_manager: ServerManager, root_res: resource.Site):
 
 
 def main(root_res: resource.Site):
-""" Main function that starts the server. """
+    """ Main function that starts the server. """
     # Resource tree creation
     server_ipv6_address = get_ipv6_address()
     if server_ipv6_address:
         logging.info(f"Server running. IPv6 address: {server_ipv6_address}")
     else:
         logging.error("Failed to retrieve IPv6 address")
-    # create an instance of ServerManager() class
-    sv_mgr = ServerManager(ipaddress.ip_address(server_ipv6_address))
-    # Get event loop
-    loop = asyncio.new_event_loop()
+        
+    sv_mgr = ServerManager(ipaddress.ip_address(server_ipv6_address))  # create an instance of ServerManager() class
+    loop = asyncio.new_event_loop()  # Get event loop
     asyncio.set_event_loop(loop)
+    
     # Create the server context task
     coap_context = loop.create_task(
         aiocoap.Context.create_server_context(
@@ -81,14 +82,17 @@ def main(root_res: resource.Site):
         )
     )
     logging.info("Server running")
+    
     # Start the advertising service task
     advertising_task = loop.create_task(sv_mgr.advertise_server())  # Advertise server
     logging.info("Advertising Server...")
+   
     # Create the main task
     main_tasks = loop.create_task(main_task(sv_mgr, root_res))
+   
     try:
         # Wait for the server context, advertising tasks and main_task to complete
-         loop.run_until_complete( asyncio.gather(coap_context,advertising_task,main_tasks)
+        loop.run_until_complete( asyncio.gather(coap_context, advertising_task, main_tasks))
     except KeyboardInterrupt:
         # Handle keyboard interrupt
         logging.info("Keyboard interrupt detected. Stopping server...")
@@ -106,4 +110,3 @@ if __name__ == "__main__":
         main(coap_root)
     except KeyboardInterrupt:
         logging.error("Exiting")
-
