@@ -60,11 +60,10 @@ class ServerManager:
 
     def __init__(self, self_ip: IPv6Address):
         self.self_ip6 = self_ip
+        self.zeroconf = Zeroconf()  # Create Zeroconf instance
 
     async def advertise_server(self):
         """Advertise server's service periodically"""
-        zeroconf = Zeroconf()
-
         # Define the service information
         service_name = "My CoAP Server"
         service_type = "_coap._udp.local."  # CoAP service type
@@ -79,9 +78,8 @@ class ServerManager:
             properties={},
         )
         try:
-            zeroconf.register_service(service_info)  # Register the service
-            logging.info("successful: Server Advertised")
-            zeroconf.close()  # Close the Zeroconf instance
+            self.zeroconf.register_service(service_info)  # Register the service
+            logging.info("Successful: Server Advertised")
 
         except KeyError:
             logging.warning("unsuccessful: Server Not Advertised")
