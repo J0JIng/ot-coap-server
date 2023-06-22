@@ -45,7 +45,7 @@ def get_ipv6_address():
 def main(root_res: resource.Site):
     """Main function that starts the server"""
     # Resource tree creation
-    server_ipv6_address = get_ipv6_address(OT_DEFAULT_IFACE,OT_DEFAULT_PREFIX)
+    server_ipv6_address = get_ipv6_address()
     if server_ipv6_address:
         logging.info(f"Server running. IPv6 address: {server_ipv6_address}")
     else:
