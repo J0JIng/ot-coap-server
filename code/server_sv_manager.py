@@ -13,19 +13,18 @@ import aiocoap
 from aiocoap import *
 from aiocoap.protocol import Request
 
+# For Network 
 import socket
 from zeroconf import ServiceInfo
 from zeroconf import ServiceBrowser, ServiceListener, Zeroconf
 
-OT_DEVICE_TIMEOUT_CYCLES = 5
-OT_DEVICE_CHILD_TIMEOUT_S = 190
-OT_DEVICE_CHILD_TIMEOUT_CYCLE_RATE = 1
-OT_DEVICE_POLL_INTERVAL_S = 5
+# Declare Variable
 ADVERT_TIMING_INTERVAL_S = 30
 COAP_UDP_DEFAULT_PORT = 5683
 
+
 class OtDeviceType(enum.IntEnum):
-    oG = 0
+    GasSent = 0
     UNKNOWN = -255
 
 
@@ -36,15 +35,18 @@ class OtDevice:
     eui64: int = field(default=0)
     uri: str = field(default="")
     last_seen: float = field(default=0)
-    timeout_cyc: int = field(default=OT_DEVICE_TIMEOUT_CYCLES)
-    ctr: int = field(default=0)
 
-    device_flag: bool = field(default=False)
-    device_conf: int = field(default=0)
-    device_dist: int = field(default=0)
-    opt_lux: int = field(default=0)
-    vdd: int = field(default=0)
+
+@dataclass
+class OtGS(OtDevice):
+    """ Class to store information about GasSentinel """
+    temperature: int = field(default=0)
+    humidity: int = field(default=0)
+    pressure: int = field(default=0)
+    cl1: int = field(default=0)
+    cl2: int = field(default=0)
     rssi: int = field(default=0)
+    vdd: int = field(default=0)
 
 
 class ServerManager:
@@ -64,6 +66,7 @@ class ServerManager:
 
     async def advertise_server(self):
         """Advertise server's service periodically"""
+
         # Define the service information
         service_name = "My CoAP Server"
         service_type = "_coap._udp.local."  # CoAP service type
@@ -103,20 +106,30 @@ class ServerManager:
                     tmp_uri = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
                     ServerManager.client_ip6[ip] = OtDevice(uri=tmp_uri)
                     logging.info(str(ip) + " updated in child sensitivity list with resource " + tmp_uri)
-                    return ip
 
                 except KeyError:
                     logging.warning("Unable to updated in child sensitivity list with resource ")
                     raise ValueError
 
     def update_child_device_info(self, ip: IPv6Address, csv: list):
-        """ Updates the sensitivity list with new information from the child """
+        """ Updates the sensitivity list with new information from GasSentinel """
         try:
-            # self.client_ip6[ip].last_seen = ls
-            self.client_ip6[ip].timeout_cyc = OT_DEVICE_TIMEOUT_CYCLES
-            """ work in progress...."""
-            # Updates the  sensitivity list with new information from update odourguard PUT ....
+            if not isinstance(self.client_ip6[ip], OtGS):
+                self.client_ip6[ip] = OtGS(device_type=OtDeviceType.GasSent, eui64=csv[4], temperature = csv[6],
+                                           humidity=csv[7], pressure=csv[8], cl1=csv[9], cl2=csv[10], rssi= csv[11],
+                                           vdd=csv[12])
+            else:
+                self.client_ip6[ip].eui64 = csv[4]
+                self.client_ip6[ip].temperature = csv[6]
+                self.client_ip6[ip].humidity = csv[7]
+                self.client_ip6[ip].pressure = csv[8]
+                self.client_ip6[ip].cl1 = csv[9]
+                self.client_ip6[ip].cl2 = csv[10]
+                self.client_ip6[ip].rssi = csv[11]
+                self.client_ip6[ip].vdd = csv[12]
+            self.client_ip6[ip].last_seen = time.time()
 
         except KeyError:
             logging.warning("Child " + str(ip) + " not found in sensitivity list")
             raise ValueError
+
