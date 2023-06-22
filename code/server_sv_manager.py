@@ -22,6 +22,7 @@ OT_DEVICE_TIMEOUT_CYCLES = 5
 OT_DEVICE_CHILD_TIMEOUT_S = 190
 OT_DEVICE_CHILD_TIMEOUT_CYCLE_RATE = 1
 OT_DEVICE_POLL_INTERVAL_S = 5
+ADVERT_TIMING_INTERVAL_S = 30
 
 
 class OtDeviceType(enum.IntEnum):
@@ -49,20 +50,19 @@ class OtDevice:
 class ServerManager:
     """ This class manages the ot clients and associated information.New children are
     found when the client sends a message to a known resource on the server"""
-
-    # create dictionary of clients accepting service - sensitivity list
-    client_ip6 = dict[IPv6Address, OtDevice]()
-    # CoAP server IPv6
-    self_ip6 = ipaddress.IPv6Address
-
+    
+    client_ip6 = dict[IPv6Address, OtDevice]() # create dictionary of clients accepting service - sensitivity list
+    self_ip6 = ipaddress.IPv6Address # CoAP server IPv6
+    
     # Queue for new children to be allocated a resource
-    incoming_queue_res_child_ips = set[IPv6Address]()
-    pend_queue_res_child_ips = set[IPv6Address]()
+    incoming_queue_child_ips = set[IPv6Address]()
+    pend_queue_child_ips = set[IPv6Address]()
 
     def __init__(self, self_ip: IPv6Address):
         self.self_ip6 = self_ip
 
-    def DNS_register_service(self, port):
+    async def advertise_server(self, port):
+        """Advertise server's service periodically"""
         zeroconf = Zeroconf()
 
         # Define the service information
@@ -87,12 +87,14 @@ class ServerManager:
             logging.warning("unsuccessful: Server Not Advertised")
             raise KeyError
 
+        await asyncio.sleep(ADVERT_TIMING_INTERVAL_S)
+
     def get_all_child_ips(self):
-        """ Returns a dict of all children in the sensitivity list """
+        """ Returns a dict of all children in the sensitivity list. """
         return self.client_ip6
 
     def update_child_uri(self):
-        """Add incoming clients to the resource tree"""
+        """ Add incoming clients to the resource tree. """
         while len(ServerManager.incoming_queue_res_child_ips) > 0:
             ip = ServerManager.incoming_queue_res_child_ips.pop()
 
