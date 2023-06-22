@@ -11,7 +11,7 @@ import aiocoap.numbers.constants
 import netifaces
 
 # imported modules
-# import influx_sender
+import influx_sender
 from server_sv_manager import ServerManager
 from server_resource_handler import ResourceHandler
 
@@ -92,7 +92,8 @@ def main(root_res: resource.Site):
    
     try:
         # Wait for the server context, advertising tasks and main_task to complete
-        loop.run_until_complete( asyncio.gather(coap_context, advertising_task, main_tasks))
+        loop.run_until_complete( asyncio.gather(coap_context, advertising_task, main_tasks,
+                                               influx_sender.influx_task(sv_mgr) if START_TASK_INFLUX_SENDER else None))
     except KeyboardInterrupt:
         # Handle keyboard interrupt
         logging.info("Keyboard interrupt detected. Stopping server...")
