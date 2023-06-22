@@ -23,24 +23,24 @@ COAP_UDP_DEFAULT_PORT = 5683
 OT_DEFAULT_PREFIX = "fd62"
 OT_DEFAULT_IFACE = "wpan0"
 
-def get_ipv6_address(interface_name, address_prefix):
+def get_ipv6_address():
     """
     Get the IPv6 address of a specific network interface with a given address prefix.
     Returns None if no matching address is found.
     """
-    try:
-        addresses = netifaces.ifaddresses(interface_name)
-        iteration = 0
-        for address_info in addresses[netifaces.AF_INET6]:
-            if address_info["addresses"].startswith(address_prefix):
-                # return ipv6 addr as a string
-                return addresses[netifaces.AF_INET6][iteration]["addresses"]
-            iteration += 1
 
-    except KeyError:
-        logging.error(f"KeyError: The '{netifaces.AF_INET6}' key is not present")
+    addrs = netifaces.ifaddresses(OT_DEFAULT_IFACE)
+    ctr = 0
+    for i in addrs[netifaces.AF_INET6]:
+        if i["addr"].startswith(OT_DEFAULT_PREFIX):
+            break
+        ctr +=1
 
-    return None
+    if ctr < len(addrs[netifaces.AF_INET6]):
+        return ipaddress.ip_address(addrs[netifaces.AF_INET6][ctr]["addr"])
+    else:
+        return None
+
 
 def main(root_res: resource.Site):
     """Main function that starts the server"""
@@ -50,29 +50,41 @@ def main(root_res: resource.Site):
         logging.info(f"Server running. IPv6 address: {server_ipv6_address}")
     else:
         logging.error("Failed to retrieve IPv6 address")
-
-    logging.info("Server running")
-
-    # Creates a server context for the CoAP server
-    asyncio.create_task(
-        aiocoap.Context.create_server_context(
-            root_res,bind=(server_ipv6_address,COAP_UDP_DEFAULT_PORT)
-        )
-    )
-    # create an instance of ServerManager() class
+     # create an instance of ServerManager() class
     sv_mgr = ServerManager(ipaddress.ip_address(server_ipv6_address))
-    logging.info("Advertising Server...")
-    # Advertise server via DNS-SD
-    sv_mgr.DNS_register_service(COAP_UDP_DEFAULT_PORT)
-
-    asyncio.get_event_loop().run_until_complete(
-        # create a new coroutine that waits for the provided coroutines to complete concurrently.
-        asyncio.gather(
-            main_task(sv_mgr,root_res),
-            # send data to an InfluxDB database if START_TASK_INFLUX_SENDER == TRUE
-            #influx_sender.influx_task(ot_mgr) if START_TASK_INFLUX_SENDER else None
+    # Get event loop
+    loop = asyncio.get_event_loop()
+    # Create the server context task
+    coap_context = loop.create_task(
+        aiocoap.Context.create_server_context(
+            root_res , bind = ( server_ipv6_address, COAP_UDP_DEFAULT_PORT)
         )
     )
+    logging.info("Server running")
+    # Start the advertising service task
+    advertising_task = loop.create_task(sv_mgr.DNS_register_service(COAP_UDP_DEFAULT_PORT)) # Advertise server via DNS-SD
+    logging.info("Advertising Server...")
+    
+
+    try:
+        # Wait for the server context, advertising tasks and main_task to complete
+        await asyncio.gather(coap_context, advertising_task, main_task, 
+                             #influx_sender if True else None
+                            )
+    except KeyboardInterrupt:
+        # Handle keyboard interrupt
+        logging.info("Keyboard interrupt detected. Stopping server...")
+        # Cancel the advertising task
+        advertising_task.cancel()
+        try:
+            # Wait for the advertising task to be cancelled
+            await advertising_task
+        except asyncio.CancelledError:
+            pass
+
+        # Stop the event loop
+        loop.stop()
+
 
 async def main_task(sv_manager: ServerManager, root_res: resource.Site):
     """Add clients to resource tree"""
