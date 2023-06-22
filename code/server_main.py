@@ -62,7 +62,7 @@ def main(root_res: resource.Site):
     )
     logging.info("Server running")
     # Start the advertising service task
-    advertising_task = loop.create_task(sv_mgr.DNS_register_service(COAP_UDP_DEFAULT_PORT)) # Advertise server via DNS-SD
+    advertising_task = loop.create_task(sv_mgr.DNS_register_service()) # Advertise server via DNS-SD
     logging.info("Advertising Server...")
     
 
