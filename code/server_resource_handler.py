@@ -22,7 +22,6 @@ class ResourceHandler(resource.Resource):
 
     async def render_put(self, request):
         """ Handles PUT requests, updates info, and calls functions to trigger actions. """
-
         client_ip = request.remote.hostinfo
         self.coap_payload = request.payload.decode("utf-8")
         csv = self.coap_payload.split(",")
@@ -31,10 +30,8 @@ class ResourceHandler(resource.Resource):
         try:
             # Place them into a queue to be added into resource tree
             ServerManager.incoming_queue_child_ips.add(ipaddress.ip_address(re.sub(r"[\[\]]", "", client_ip)))
-
             # Update the resource tree with client information
             self.sv_mgr.update_child_uri()
-
             # Update the information on Client
             self.sv_mgr.update_child_device_info(ipaddress.ip_address(re.sub(r"[\[\]]", "", client_ip)), csv)
 
