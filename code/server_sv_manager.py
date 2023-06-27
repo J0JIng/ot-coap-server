@@ -142,7 +142,7 @@ class ServerManager:
             new_child_device = OtGS(
                 device_type=OtDeviceType.GasSent,
                 eui64=csv[0],
-                iaq=csv[1]
+                iaq=csv[1],
                 temperature=csv[2],
                 humidity=csv[3],
                 pressure=csv[4],
