@@ -134,14 +134,7 @@ class ServerManager:
             child_device.rssi = csv[11]
             child_device.vdd = csv[12]
             child_device.last_seen = time.time()
-    
-            # Allocate a resource to the client
-            self.allocate_resource(ip)
-            logging.info(str(ip) + " updated in child sensitivity list with resource " + child_device.uri)
-    
-            # Add the child IP to the pending queue
-            self.pend_queue_child_ips.add(ip)
-            logging.info(str(ip) + " added to child pending queue")
+            
         else:
             # Create a new child device and add it to the sensitivity list
             new_child_device = OtGS(
@@ -156,16 +149,11 @@ class ServerManager:
                 vdd=csv[12]
             )
             new_child_device.last_seen = time.time()
-    
             # Add the child IP to the sensitivity list
             self.client_ip6[ip] = new_child_device
-    
-            # Allocate a resource to the client
-            self.allocate_resource(ip)
-            logging.info(str(ip) + " added to child sensitivity list with resource " + new_child_device.uri)
-    
-        # Place the child IP into the incoming queue to be added into the resource tree
-        self.incoming_queue_child_ips.add(ip)
-    
-        # Update the resource tree with client information
-        self.update_child_uri()
+            # Place the child IP into the incoming queue to be added into the resource tree
+            self.incoming_queue_child_ips.add(ip)
+            # Update the resource tree with client information
+            self.update_child_uri()
+            logging.info(str(ip) + " added to incoming queue " + new_child_device.uri)
+            
