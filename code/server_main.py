@@ -21,7 +21,7 @@ POLL_NEW_CHILDREN_INTERVAL_S = 30
 
 # Change accordingly to machine
 COAP_UDP_DEFAULT_PORT = 5683
-OT_DEFAULT_PREFIX = "fd62"
+OT_DEFAULT_PREFIX = "fd3c"
 OT_DEFAULT_IFACE = "wpan0"
 
 
@@ -86,7 +86,8 @@ def main(root_res: resource.Site):
     # Start the advertising service task
     advertising_task = loop.create_task(sv_mgr.advertise_server())  # Advertise server
     logging.info("Advertising Server...")
-   
+    root_res.add_resource( ("common",), ResourceHandler("common",sv_mgr),)
+    
     # Create the main task
     main_tasks = loop.create_task(main_task(sv_mgr, root_res))
    
