@@ -36,12 +36,6 @@ class ResourceHandler(resource.Resource):
         try:
             # Update the information on Client
             self.sv_mgr.update_child_device_info(client_ip, csv)
-            # Place them into a queue to be added into resource tree
-            ServerManager.incoming_queue_child_ips.add(client_ip)
-            # Update the resource tree with client information
-            self.sv_mgr.update_child_uri()
-            
-            
             # Check if response is None
             response = aiocoap.Message(code=aiocoap.CHANGED)
             if response is None:
