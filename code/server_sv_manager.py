@@ -105,8 +105,7 @@ class ServerManager:
             ip = ServerManager.incoming_queue_child_ips.pop()
 
             if ip not in ServerManager.client_ip6:
-                try:
-                    # Allocate a resource to the client
+                # Allocate a resource to the client
                     self.allocate_resource(ip)
                     logging.info(
                         str(ip) + " updated in child sensitivity list with resource " + self.client_ip6[ip].uri
@@ -115,9 +114,7 @@ class ServerManager:
                     ServerManager.pend_queue_child_ips.add(ip)
                     logging.info(str(ip) + " added to child pending queue")
 
-                except KeyError:
-                    logging.warning("Unable to update child sensitivity list with resource")
-                    raise ValueError
+            
 
     def update_child_device_info(self, ip: IPv6Address, csv: list):
         """ Updates the sensitivity list with new information from GasSentinel """
