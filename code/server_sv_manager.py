@@ -55,6 +55,7 @@ class ServerManager:
 
     client_ip6 = dict[IPv6Address, OtDevice]()  # create dictionary of clients accepting service - sensitivity list
     self_ip6 = ipaddress.IPv6Address  # CoAP server IPv6
+     common_resource_uri = "common" # Common Resource for URL
 
     # Queue for new children to be allocated a resource
     incoming_queue_child_ips = set[IPv6Address]()
@@ -93,15 +94,11 @@ class ServerManager:
     def get_all_child_ips(self):
         """ Returns a dict of all children in the sensitivity list. """
         return self.client_ip6
-
+    
     def allocate_resource(self, ip: IPv6Address):
-        """Allocate a resource to the client based on its EUI64."""
-        # Generate a unique URI for the client based on a slice of its EUI64
-        eui64 = self.client_ip6[ip].eui64
-        resource = str(eui64)[:8]  # Take a slice of the EUI64 to use as the resource
-        self.client_ip6[ip].uri = resource
-        logging.info(f"Allocated resource {resource} to client {ip}")
-
+        """Allocate a common resource to the client."""
+        self.client_ip6[ip].uri = self.common_resource_uri
+        
     def update_child_uri(self):
         """Add incoming clients to the resource tree."""
         while len(ServerManager.incoming_queue_child_ips) > 0:
