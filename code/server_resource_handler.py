@@ -27,13 +27,19 @@ class ResourceHandler(resource.Resource):
         csv = self.coap_payload.split(",")
         logging.info("Received PUT request from " + str(client_ip) + " with payload " + str(csv))
         logging.warning(csv)
+
+        client_ip_str = str(re.sub(r"[\[\]]", "", client_ip))
+        client_ip = ipaddress.ip_address(client_ip_str)
+
+
+        
         try:
             # Place them into a queue to be added into resource tree
-            ServerManager.incoming_queue_child_ips.add(ipaddress.ip_address(re.sub(r"[\[\]]", "", client_ip)))
+            ServerManager.incoming_queue_child_ips.add(client_ip)
             # Update the resource tree with client information
             self.sv_mgr.update_child_uri()
             # Update the information on Client
-            self.sv_mgr.update_child_device_info(ipaddress.ip_address(re.sub(r"[\[\]]", "", client_ip)), csv)
+            self.sv_mgr.update_child_device_info(client_ip, csv)
             
             # Check if response is None
             response = aiocoap.Message(code=aiocoap.CHANGED)
