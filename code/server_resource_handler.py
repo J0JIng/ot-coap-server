@@ -2,7 +2,7 @@ import ipaddress
 import time
 import re
 import logging
-from aiocoap import resource
+from aiocoap import resource,Message,CHANGED
 import aiocoap
 
 from server_sv_manager import ServerManager
@@ -34,6 +34,9 @@ class ResourceHandler(resource.Resource):
             self.sv_mgr.update_child_uri()
             # Update the information on Client
             self.sv_mgr.update_child_device_info(ipaddress.ip_address(re.sub(r"[\[\]]", "", client_ip)), csv)
+            # Create a response indicating success
+            response = aiocoap.Message(code=aiocoap.CHANGED)
+            return response
 
         except ValueError:
             logging.warning("Invalid payload")
