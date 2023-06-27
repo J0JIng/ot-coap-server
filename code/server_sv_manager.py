@@ -127,14 +127,14 @@ class ServerManager:
             # Update the existing child device with the new information
             child_device = self.client_ip6[ip]
             child_device.eui64 = csv[0]
-            child_device.iaq = csv[2]
-            child_device.temperature = csv[3]
-            child_device.humidity = csv[4]
-            child_device.pressure = csv[5]
-            child_device.cl1 = csv[6]
-            child_device.cl2 = csv[7]
-            child_device.rssi = csv[8]
-            child_device.vdd = csv[9]
+            child_device.iaq = csv[1]
+            child_device.temperature = csv[2]
+            child_device.humidity = csv[3]
+            child_device.pressure = csv[4]
+            child_device.cl1 = csv[5]
+            child_device.cl2 = csv[6]
+            child_device.rssi = csv[7]
+            child_device.vdd = csv[8]
             child_device.last_seen = time.time()
             
         else:
@@ -142,14 +142,14 @@ class ServerManager:
             new_child_device = OtGS(
                 device_type=OtDeviceType.GasSent,
                 eui64=csv[0],
-                iaq=csv[2]
-                temperature=csv[3],
-                humidity=csv[4],
-                pressure=csv[5],
-                cl1=csv[6],
-                cl2=csv[7],
-                rssi=csv[8],
-                vdd=csv[9]
+                iaq=csv[1]
+                temperature=csv[2],
+                humidity=csv[3],
+                pressure=csv[4],
+                cl1=csv[5],
+                cl2=csv[6],
+                rssi=csv[7],
+                vdd=csv[8]
             )
             new_child_device.last_seen = time.time()
             # Add the child IP to the sensitivity list
