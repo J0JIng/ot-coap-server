@@ -101,10 +101,10 @@ class ServerManager:
         
     def update_child_uri(self):
         """Add incoming clients to the resource tree."""
-        while len(ServerManager.incoming_queue_child_ips) > 0:
-            ip = ServerManager.incoming_queue_child_ips.pop()
+        while len(self.incoming_queue_child_ips) > 0:
+            ip = self.incoming_queue_child_ips.pop()
 
-            if ip in ServerManager.client_ip6:
+            if ip in self.client_ip6:
                 # Allocate a resource to the client
                     self.allocate_resource(ip)
                     logging.info(
@@ -119,27 +119,53 @@ class ServerManager:
             
 
     def update_child_device_info(self, ip: IPv6Address, csv: list):
-        """ Updates the sensitivity list with new information from GasSentinel """
-        try:
-            if not isinstance(self.client_ip6[ip], OtGS):
-                self.client_ip6[ip] = OtGS(device_type=OtDeviceType.GasSent, eui64=csv[4], temperature = csv[6],
-                                           humidity=csv[7], pressure=csv[8], cl1=csv[9], cl2=csv[10], rssi= csv[11],
-                                           vdd=csv[12])
-            else:
-                self.client_ip6[ip].eui64 = csv[4]
-                self.client_ip6[ip].temperature = csv[6]
-                self.client_ip6[ip].humidity = csv[7]
-                self.client_ip6[ip].pressure = csv[8]
-                self.client_ip6[ip].cl1 = csv[9]
-                self.client_ip6[ip].cl2 = csv[10]
-                self.client_ip6[ip].rssi = csv[11]
-                self.client_ip6[ip].vdd = csv[12]
-            self.client_ip6[ip].last_seen = time.time()
-            # Place them into a queue to be added into resource tree
-            ServerManager.incoming_queue_child_ips.add(client_ip)
-            # Update the resource tree with client information
-            self.sv_mgr.update_child_uri()
+    """Updates the sensitivity list with new information from GasSentinel"""
 
-        except KeyError:
-            logging.warning("Child " + str(ip) + " not found in sensitivity list")
-            raise ValueError
+        # Check if the child IP is already present in the sensitivity list
+        if ip in self.client_ip6:
+            # Update the existing child device with the new information
+            child_device = self.client_ip6[ip]
+            child_device.eui64 = csv[4]
+            child_device.temperature = csv[6]
+            child_device.humidity = csv[7]
+            child_device.pressure = csv[8]
+            child_device.cl1 = csv[9]
+            child_device.cl2 = csv[10]
+            child_device.rssi = csv[11]
+            child_device.vdd = csv[12]
+            child_device.last_seen = time.time()
+    
+            # Allocate a resource to the client
+            self.allocate_resource(ip)
+            logging.info(str(ip) + " updated in child sensitivity list with resource " + child_device.uri)
+    
+            # Add the child IP to the pending queue
+            self.pend_queue_child_ips.add(ip)
+            logging.info(str(ip) + " added to child pending queue")
+        else:
+            # Create a new child device and add it to the sensitivity list
+            new_child_device = OtGS(
+                device_type=OtDeviceType.GasSent,
+                eui64=csv[4],
+                temperature=csv[6],
+                humidity=csv[7],
+                pressure=csv[8],
+                cl1=csv[9],
+                cl2=csv[10],
+                rssi=csv[11],
+                vdd=csv[12]
+            )
+            new_child_device.last_seen = time.time()
+    
+            # Add the child IP to the sensitivity list
+            self.client_ip6[ip] = new_child_device
+    
+            # Allocate a resource to the client
+            self.allocate_resource(ip)
+            logging.info(str(ip) + " added to child sensitivity list with resource " + new_child_device.uri)
+    
+        # Place the child IP into the incoming queue to be added into the resource tree
+        self.incoming_queue_child_ips.add(ip)
+    
+        # Update the resource tree with client information
+        self.update_child_uri()
