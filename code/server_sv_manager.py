@@ -135,6 +135,10 @@ class ServerManager:
                 self.client_ip6[ip].rssi = csv[11]
                 self.client_ip6[ip].vdd = csv[12]
             self.client_ip6[ip].last_seen = time.time()
+            # Place them into a queue to be added into resource tree
+            ServerManager.incoming_queue_child_ips.add(client_ip)
+            # Update the resource tree with client information
+            self.sv_mgr.update_child_uri()
 
         except KeyError:
             logging.warning("Child " + str(ip) + " not found in sensitivity list")
