@@ -55,7 +55,7 @@ class ServerManager:
 
     client_ip6 = dict[IPv6Address, OtDevice]()  # create dictionary of clients accepting service - sensitivity list
     self_ip6 = ipaddress.IPv6Address  # CoAP server IPv6
-     common_resource_uri = "common" # Common Resource for URL
+    common_resource_uri = "common" # Common Resource for URL
 
     # Queue for new children to be allocated a resource
     incoming_queue_child_ips = set[IPv6Address]()
