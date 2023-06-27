@@ -40,6 +40,7 @@ class OtDevice:
 @dataclass
 class OtGS(OtDevice):
     """ Class to store information about GasSentinel """
+    iaq: int = field(default=0)
     temperature: int = field(default=0)
     humidity: int = field(default=0)
     pressure: int = field(default=0)
@@ -125,28 +126,30 @@ class ServerManager:
         if ip in self.client_ip6:
             # Update the existing child device with the new information
             child_device = self.client_ip6[ip]
-            child_device.eui64 = csv[4]
-            child_device.temperature = csv[6]
-            child_device.humidity = csv[7]
-            child_device.pressure = csv[8]
-            child_device.cl1 = csv[9]
-            child_device.cl2 = csv[10]
-            child_device.rssi = csv[11]
-            child_device.vdd = csv[12]
+            child_device.eui64 = csv[0]
+            child_device.iaq = csv[2]
+            child_device.temperature = csv[3]
+            child_device.humidity = csv[4]
+            child_device.pressure = csv[5]
+            child_device.cl1 = csv[6]
+            child_device.cl2 = csv[7]
+            child_device.rssi = csv[8]
+            child_device.vdd = csv[9]
             child_device.last_seen = time.time()
             
         else:
             # Create a new child device and add it to the sensitivity list
             new_child_device = OtGS(
                 device_type=OtDeviceType.GasSent,
-                eui64=csv[4],
-                temperature=csv[6],
-                humidity=csv[7],
-                pressure=csv[8],
-                cl1=csv[9],
-                cl2=csv[10],
-                rssi=csv[11],
-                vdd=csv[12]
+                eui64=csv[0],
+                iaq=csv[2]
+                temperature=csv[3],
+                humidity=csv[4],
+                pressure=csv[5],
+                cl1=csv[6],
+                cl2=csv[7],
+                rssi=csv[8],
+                vdd=csv[9]
             )
             new_child_device.last_seen = time.time()
             # Add the child IP to the sensitivity list
