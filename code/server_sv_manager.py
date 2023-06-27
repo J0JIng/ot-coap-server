@@ -119,7 +119,7 @@ class ServerManager:
             
 
     def update_child_device_info(self, ip: IPv6Address, csv: list):
-    """Updates the sensitivity list with new information from GasSentinel"""
+        """Updates the sensitivity list with new information from GasSentinel"""
 
         # Check if the child IP is already present in the sensitivity list
         if ip in self.client_ip6:
