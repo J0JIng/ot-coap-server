@@ -34,9 +34,15 @@ class ResourceHandler(resource.Resource):
             self.sv_mgr.update_child_uri()
             # Update the information on Client
             self.sv_mgr.update_child_device_info(ipaddress.ip_address(re.sub(r"[\[\]]", "", client_ip)), csv)
-            # Create a response indicating success
+            
+            # Check if response is None
             response = aiocoap.Message(code=aiocoap.CHANGED)
+            if response is None:
+                logging.error("Failed to create a valid response message")
+                # Handle the error accordingly
+                # You can return an error response or raise an exception
+
             return response
 
-        except ValueError:
-            logging.warning("Invalid payload")
+        except ValueError as e:
+            logging.warning("Invalid payload: %s", str(e))
