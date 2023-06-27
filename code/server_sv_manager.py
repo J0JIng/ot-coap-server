@@ -104,7 +104,7 @@ class ServerManager:
         while len(ServerManager.incoming_queue_child_ips) > 0:
             ip = ServerManager.incoming_queue_child_ips.pop()
 
-            if ip not in ServerManager.client_ip6:
+            if ip in ServerManager.client_ip6:
                 # Allocate a resource to the client
                     self.allocate_resource(ip)
                     logging.info(
@@ -113,6 +113,8 @@ class ServerManager:
                     )
                     ServerManager.pend_queue_child_ips.add(ip)
                     logging.info(str(ip) + " added to child pending queue")
+            else:
+                logging.warning("Unable to update child sensitivity list with resource for IP " + str(ip))
 
             
 
