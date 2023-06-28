@@ -16,7 +16,6 @@ from server_sv_manager import ServerManager
 from server_resource_handler import ResourceHandler
 
 # Declaring Global Variable
-START_TASK_INFLUX_SENDER = False
 POLL_NEW_CHILDREN_INTERVAL_S = 30
 
 # Change accordingly to machine
