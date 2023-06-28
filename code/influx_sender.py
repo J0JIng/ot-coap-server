@@ -9,11 +9,11 @@ from server_sv_manager import ServerManager, OtDeviceType
 
 async def influx_task(sv_mgr: ServerManager):
     """Task to periodically send data to influxdb."""
-    bucket = "688e34f6e74bc4ac"
-    org = "c8f2e56a9bd8e1c9"
-    token = "BjiTPge5fFafkNgRCJDuBk-NBYNbvVSyvKel6LiskIajK2U57peTBBVrmaqQZTgTHziQFr479f74fdXXNpdv3A=="
+    bucket = ""
+    org = ""
+    token = ""
     # Store the URL of your InfluxDB instance
-    url = "https://us-east-1-1.aws.cloud2.influxdata.com"
+    url = ""
     async with InfluxDBClientAsync(url=url, token=token, org=org) as client:
         # set bucket
         while True:
