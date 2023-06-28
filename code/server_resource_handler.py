@@ -6,8 +6,6 @@ from aiocoap import resource,Message,CHANGED
 import aiocoap
 
 from server_sv_manager import ServerManager
-# from user_handler import user_handler_callback
-
 
 class ResourceHandler(resource.Resource):
     """This resource supports the PUT methods.
@@ -30,9 +28,6 @@ class ResourceHandler(resource.Resource):
 
         client_ip_str = str(re.sub(r"[\[\]]", "", client_ip))
         client_ip = ipaddress.ip_address(client_ip_str)
-
-
-        
         try:
             # Update the information on Client
             self.sv_mgr.update_child_device_info(client_ip, csv)
