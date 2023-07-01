@@ -2,7 +2,7 @@ import ipaddress
 import time
 import re
 import logging
-from aiocoap import resource,Message,CHANGED
+from aiocoap import resource,Message,CHANGED,BAD_REQUEST
 import aiocoap
 
 from server_sv_manager import ServerManager
@@ -28,8 +28,8 @@ class ResourceHandler(resource.Resource):
         client_ip_str = str(re.sub(r"[\[\]]", "", client_ip))
         client_ip = ipaddress.ip_address(client_ip_str)
         
-        # Check if CSV is valid
-        if '0' in csv:
+        # Check if CSV is valid. take in non-zero reading of inference cl1/cl2 
+        if csv[5] == '0' or csv[6] == '0':
             logging.error("CSV contains zero value(s). Rejecting the request.")
             # Return an appropriate error response
             return aiocoap.Message(code=aiocoap.BAD_REQUEST)
