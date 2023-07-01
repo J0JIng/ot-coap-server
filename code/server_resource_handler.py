@@ -37,7 +37,7 @@ class ResourceHandler(resource.Resource):
         try:
             # Update the information on Client
             self.sv_mgr.update_child_device_info(client_ip, csv)
-            # Check if response is None
+            # Return an appropriate error response
             response = aiocoap.Message(code=aiocoap.CHANGED)
             return response
 
