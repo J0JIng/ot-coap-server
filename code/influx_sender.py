@@ -28,6 +28,7 @@ async def influx_task(sv_mgr: ServerManager):
                     point = (
                         Point("ot-ipr")
                         .tag("ip", ip)
+                        .field("Indoor_Air_Quality", int(sv_mgr.get_all_child_ips()[ip].iaq))
                         .field("temperature", int(sv_mgr.get_all_child_ips()[ip].temperature))
                         .field("humidity", int(sv_mgr.get_all_child_ips()[ip].humidity))
                         .field("pressure", int(sv_mgr.get_all_child_ips()[ip].pressure))
