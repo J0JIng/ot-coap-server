@@ -25,19 +25,20 @@ class ResourceHandler(resource.Resource):
         csv = self.coap_payload.split(",")
         logging.info("Received PUT request from " + str(client_ip) + " with payload " + str(csv))
         logging.warning(csv)
-
         client_ip_str = str(re.sub(r"[\[\]]", "", client_ip))
         client_ip = ipaddress.ip_address(client_ip_str)
+        
+        # Check if CSV is valid
+        if '0' in csv:
+            logging.error("CSV contains zero value(s). Rejecting the request.")
+            # Return an appropriate error response
+            return aiocoap.Message(code=aiocoap.BAD_REQUEST)
+            
         try:
             # Update the information on Client
             self.sv_mgr.update_child_device_info(client_ip, csv)
             # Check if response is None
             response = aiocoap.Message(code=aiocoap.CHANGED)
-            if response is None:
-                logging.error("Failed to create a valid response message")
-                # Handle the error accordingly
-                # You can return an error response or raise an exception
-
             return response
 
         except ValueError as e:
