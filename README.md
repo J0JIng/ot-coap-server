@@ -1,4 +1,4 @@
-# ot-coap-server for [GasSentinel]()
+# ot-coap-server for [GasSentinel](https://github.com/J0JIng/GasSentinel)
 
 This repo contains a python script to provide a CoAP server.
 
