@@ -3,7 +3,7 @@ import asyncio  # pylint: disable=import-error
 import ipaddress
 import logging
 import coloredlogs
-
+import subprocess # WORKAROUND
 # CoAP lib / Network
 import aiocoap
 from aiocoap import resource
@@ -22,7 +22,6 @@ POLL_NEW_CHILDREN_INTERVAL_S = 30
 COAP_UDP_DEFAULT_PORT = 5683
 OT_DEFAULT_PREFIX = ""
 OT_DEFAULT_IFACE = "wpan0"
-
 
 def get_ipv6_address():
     """ Get the IPv6 address of a specific network interface with a given address prefix.
@@ -61,6 +60,7 @@ async def main_task(sv_manager: ServerManager, root_res: resource.Site):
         await asyncio.sleep(POLL_NEW_CHILDREN_INTERVAL_S)
 
 
+
 def main(root_res: resource.Site):
     """ Main function that starts the server. """
     # Resource tree creation
@@ -69,11 +69,23 @@ def main(root_res: resource.Site):
         logging.info(f"Server running. IPv6 address: {server_ipv6_address}")
     else:
         logging.error("Failed to retrieve IPv6 address")
-        
+
     sv_mgr = ServerManager(ipaddress.ip_address(server_ipv6_address))  # create an instance of ServerManager() class
+
+
+    #BEGIN WORKAROUND
+    result = subprocess.run(['ot-ctl', 'srp', 'client', 'autostart', 'enable'], stdout=subprocess.PIPE)
+    print(result.stdout.decode('utf8'))
+    result = subprocess.run(['ot-ctl', 'srp', 'client', 'host', 'address', str(server_ipv6_address)], stdout=subprocess.PIPE)
+    print(result.stdout.decode('utf8'))
+    result = subprocess.run(['ot-ctl', 'srp', 'client', 'host', 'name', 'otbr1'], stdout=subprocess.PIPE)
+    print(result.stdout.decode('utf8'))
+    result = subprocess.run(['ot-ctl', 'srp', 'client', 'service', 'add', 'otbr1', '_coap._udp', '1234'], stdout=subprocess.PIPE)
+    print(result.stdout.decode('utf8'))
+    #END WORKAROUND
     loop = asyncio.new_event_loop()  # Get event loop
     asyncio.set_event_loop(loop)
-    
+
     # Create the server context task
     coap_context = loop.create_task(
         aiocoap.Context.create_server_context(
@@ -81,15 +93,15 @@ def main(root_res: resource.Site):
         )
     )
     logging.info("Server running")
-    
+
     # Start the advertising service task
     advertising_task = loop.create_task(sv_mgr.advertise_server())  # Advertise server
     logging.info("Advertising Server...")
     root_res.add_resource( ("common",), ResourceHandler("common",sv_mgr),)
-    
+
     # Create the main task
     main_tasks = loop.create_task(main_task(sv_mgr, root_res))
-   
+
     try:
         # Wait for the server context, advertising tasks and main_task to complete
         loop.run_until_complete( asyncio.gather(coap_context, advertising_task, main_tasks,
@@ -111,3 +123,4 @@ if __name__ == "__main__":
         main(coap_root)
     except KeyboardInterrupt:
         logging.error("Exiting")
+
